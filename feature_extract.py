@@ -2,22 +2,22 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--input_train", type=str, default="data_train.csv", help="The csv file containing the training features")
-parser.add_argument("--input_test", type=str, default="data_test.csv", help="The csv file containing the test features")
-parser.add_argument("--max_id", type=str, default="maxID.txt", help="The txt file containing the pairs (feature/maxID)")
-parser.add_argument("--output_train", type=str, default="train_svm.txt", help="The output file where to write the training extracted features")
-parser.add_argument("--output_test", type=str, default="test_svm.txt", help="The output file where to write the test extracted features")
-parser.add_argument("--list_features", nargs='+', type=int, help="The list of features to extract", required=True)
+parser.add_argument("--input_train", type=str, default="data/data_train.csv", help="The csv file containing the training features")
+parser.add_argument("--input_test", type=str, default="data/data_test.csv", help="The csv file containing the test features")
+parser.add_argument("--max_id", type=str, default="data/maxID.txt", help="The txt file containing the pairs (feature/maxID)")
+parser.add_argument("--output_train", type=str, default="data/train_svm.txt", help="The output file where to write the training extracted features")
+parser.add_argument("--output_test", type=str, default="data/test_svm.txt", help="The output file where to write the test extracted features")
+parser.add_argument("--list_cat_features", nargs='+', type=int, help="The list of categorical features to extract", required=True)
 
 a = parser.parse_args()
 
-def extract_one_hot_encoding(input, max_id, output, list_features):
+def extract_one_hot_encoding(input, max_id, output, list_cat_features):
     """
     Extract the features contained in input file (csv) and write the extracted features in the output file (SVM format)
     :param input: the csv file containing the features
     :param max_id: the txt file containing the pairs (feature/maxID)
     :param output: the output file where to write the extracted features
-    :param list_features: the features to extract
+    :param list_cat_features: the features to extract
     :return:
     """
     # Open raw features file
@@ -52,7 +52,7 @@ def extract_one_hot_encoding(input, max_id, output, list_features):
         #In SVM format, index start with 1 while it starts with 0 in python
         x = []
         sum_cum = 1
-        for feature in list_features:
+        for feature in list_cat_features:
             x.append(str(int(data[feature]) + sum_cum))
             sum_cum = sum_cum + maxID[featname[int(feature)]]
 
