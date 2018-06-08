@@ -1,81 +1,81 @@
-# Summary
-# Open the training set
-# Load the maximum index
-## In maxID.txt, we have pairs "number of the feature"/"maximum of this feature"
-# Save the features in SVM light format
-# Note that the original version of feature_extract.py uses only advertiser_id, campaign_id and category_id
-# Note also that they dummy_encode the features here !
-# Note that we try to compute an accuracy score after extracting the features and training the model.
-# But the test set doesn't contain any target values !
-# ---> Need to build my own train/test set :')
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--input_train", type=str, default="data_train.csv", help="The csv file containing the training features")
+parser.add_argument("--input_test", type=str, default="data_test.csv", help="The csv file containing the test features")
+parser.add_argument("--max_id", type=str, default="maxID.txt", help="The txt file containing the pairs (feature/maxID)")
+parser.add_argument("--output_train", type=str, default="train_svm.txt", help="The output file where to write the training extracted features")
+parser.add_argument("--output_test", type=str, default="test_svm.txt", help="The output file where to write the test extracted features")
+parser.add_argument("--list_features", nargs='+', type=int, help="The list of features to extract", required=True)
+
+a = parser.parse_args()
+
+def extract_one_hot_encoding(input, max_id, output, list_features):
+    """
+    Extract the features contained in input file (csv) and write the extracted features in the output file (SVM format)
+    :param input: the csv file containing the features
+    :param max_id: the txt file containing the pairs (feature/maxID)
+    :param output: the output file where to write the extracted features
+    :param list_features: the features to extract
+    :return:
+    """
+    # Open raw features file
+    fin = open(input)
+    featname = fin.readline().strip().split(',')
+
+    # Open maxID file
+    maxID = {}
+    finID = open(max_id)
+
+    # For each features, construct the table of the maxID
+    for line in finID:
+        i, id = line.strip().split('\t')
+        maxID[featname[int(i)]] = int(id) + 1
+
+    # Open output file which will contain extracted features
+    fout = open(output,'w')
+
+    # Use One Hot Encoded
+    i = 0
+    for line in fin:
+        data = line.strip().split(',')
+
+        # Get the target
+        if data[14] == '0':
+            click = '-1' # The hasn't been clicked
+        elif data[14] == '1':
+            click = '+1' # The ad has been clicked
+        elif data[14] == '':
+            click = '0' # No data (test set)
+
+        #In SVM format, index start with 1 while it starts with 0 in python
+        x = []
+        sum_cum = 1
+        for feature in list_features:
+            x.append(str(int(data[feature]) + sum_cum))
+            sum_cum = sum_cum + maxID[featname[int(feature)]]
+
+        x_svm = [click]
+        for index in x:
+            x_svm.append(index + ':1')
+
+        fout.write(' '.join(x_svm) + '\n')
+
+    fin.close()
+    fout.close()
 
 
+def main():
 
+    print("Extraction of the training features : ")
+    extract_one_hot_encoding(a.input_train, a.max_id, a.output_train, a.list_features)
+    print("\t Done.")
 
+    print("Extraction of the test features : ")
+    extract_one_hot_encoding(a.input_test, a.max_id, a.output_test, a.list_features)
+    print("\t Done.")
 
-
-#Extract features and save as SVM light format
-fin = open('data_train.csv')
-
-featname = fin.readline().strip().split(',')
-
-#Load the maximum index
-maxID = {}
-finID = open('maxID.txt')
-
-for line in finID:
-    i,id = line.strip().split('\t')
-    maxID[featname[int(i)]] = int(id) + 1
-
-fout = open('train_svm.txt','w')
-
-#Use advertiser_id,campaign_id,category_id
-for line in fin:
-    data = line.strip().split(',')
-
-    if data[14] == '0':
-        click = '-1'
-    else:
-        click = '+1'
-    #In SVM format, index start with 1 while it starts with 0 in python
-    x = []
-    x.append(str(int(data[1]) + 1))
-    x.append(str(int(data[2]) + 1 + maxID[featname[1]]))
-    x.append(str(int(data[3]) + 1 + maxID[featname[1]] + maxID[featname[2]]))
-
-    x_svm = [click]
-    for index in x:
-        x_svm.append(index + ':1')
-
-    fout.write(' '.join(x_svm) + '\n')
-
-
-fin.close()
-fout.close()
-
-#Extract features and save as SVM light format
-fin = open('data_test.csv')
-fin.readline()
-
-fout = open('test_svm.txt','w')
-
-for line in fin:
-    data = line.strip().split(',')
-
-    #In SVM format, index start with 1 while it starts with 0 in python
-    x = []
-    x.append(str(int(data[1]) + 1))
-    x.append(str(int(data[2]) + 1 + maxID[featname[1]]))
-    x.append(str(int(data[3]) + 1 + maxID[featname[1]] + maxID[featname[2]]))
-
-    x_svm = ['0']
-    for index in x:
-        x_svm.append(index + ':1')
-
-    fout.write(' '.join(x_svm) + '\n')
-
-
-fin.close()
-fout.close()
+main()
 
 
