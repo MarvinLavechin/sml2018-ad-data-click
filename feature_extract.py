@@ -9,7 +9,7 @@ parser.add_argument("--max_id", type=str, default="maxID.txt", help="The txt fil
 parser.add_argument("--scale_file", type=str, default="trainSCALE.txt", help="The txt file containing the 2-uplets (number feature/mean/std)")
 parser.add_argument("--output_train", type=str, default="train_svm.txt", help="The output file where to write the training extracted features")
 parser.add_argument("--output_test", type=str, default="test_svm.txt", help="The output file where to write the test extracted features")
-parser.add_argument("--list_cat_features", nargs='+', type=int, help="The list of categorical features to extract", required=True)
+parser.add_argument("--list_cat_features", nargs='+', default = [], type=int, help="The list of categorical features to extract")
 parser.add_argument("--list_num_features", nargs='+', default=[], type=int, help="The list of numerical features to extract")
 
 a = parser.parse_args()
@@ -52,7 +52,7 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
     # Open output file which will contain extracted features
     fout = open(data_directory+output,'w')
 
-    # Use One Hot Encoded
+    # Use One Hot Encoding
     i = 0
     for line in fin:
         data = line.strip().split(',')
@@ -85,10 +85,10 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
             std = scale[featname[int(num_feature)]][1]
             maximum = scale[featname[int(num_feature)]][2]
 
-            print(data[num_feature])
-            if data[num_feature] == ' ':
+            if data[num_feature] != '':
                 scaled_data = (float(data[num_feature])-mean)/std
             else:
+                #None values
                 if(featname[int(num_feature)] == 'last_login_interval' or
                         featname[int(num_feature)] == 'last_paid_interval'):
                     scaled_data = maximum
@@ -104,8 +104,12 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
             x_svm.append(index + ':1')
 
         extracted_features = x_svm+x_num
+        # print(extracted_features)
         fout.write(' '.join(extracted_features) + '\n')
 
+        # i = i+1
+        # if i == 5:
+        #     break
     for i in range(0,len(interval)-1):
         print("Created feature from %d to %d" % (interval[i], interval[i+1]-1))
 
