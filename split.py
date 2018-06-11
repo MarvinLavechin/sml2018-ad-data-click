@@ -22,16 +22,16 @@ def main():
     df = pd.read_csv(a.input_file, header=0, sep=',', parse_dates=['logged_at'])
     train_df, test_df = train_test_split(df, test_size=1-a.train_frac, random_state=42)
 
-    directory_data = 'data/'
-    if not os.path.exists(directory_data):
-        os.makedirs(directory_data)
+    data_directory = 'data/'
+    if not os.path.exists(data_directory):
+        os.makedirs(data_directory)
 
     print("Writing training data : ")
-    train_df.to_csv(path_or_buf=directory_data+a.output_train, index=False)
+    train_df.to_csv(path_or_buf=data_directory+a.output_train, index=False)
     print("\t Done.")
 
     print("Writing test data : ")
-    test_df.to_csv(path_or_buf=directory_data+a.output_test, index=False)
+    test_df.to_csv(path_or_buf=data_directory+a.output_test, index=False)
     print("\t Done.")
 
 main()
