@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import numpy as np
 
 parser = argparse.ArgumentParser()
 
@@ -9,7 +10,7 @@ parser.add_argument("--max_id", type=str, default="maxID.txt", help="The txt fil
 parser.add_argument("--scale_file", type=str, default="trainSCALE.txt", help="The txt file containing the 2-uplets (number feature/mean/std)")
 parser.add_argument("--output_train", type=str, default="train_svm.txt", help="The output file where to write the training extracted features")
 parser.add_argument("--output_test", type=str, default="test_svm.txt", help="The output file where to write the test extracted features")
-parser.add_argument("--list_cat_features", nargs='+', default = [], type=int, help="The list of categorical features to extract")
+parser.add_argument("--list_cat_features", nargs='+', default =[], type=int, help="The list of categorical features to extract")
 parser.add_argument("--list_num_features", nargs='+', default=[], type=int, help="The list of numerical features to extract")
 
 a = parser.parse_args()
@@ -46,8 +47,8 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
     scale_file = open(data_directory+scale_file)
     # For each numerical features, construct the table of the mean/scale
     for line in scale_file:
-        i, mean, std, maximum = line.strip().split(' ')
-        scale[featname[int(i)]] = [float(mean), float(std), float(maximum)]
+        i, mean, std, minimum, maximum = line.strip().split(' ')
+        scale[featname[int(i)]] = [float(mean), float(std), float(minimum), float(maximum)]
 
     # Open output file which will contain extracted features
     fout = open(data_directory+output,'w')
@@ -69,7 +70,6 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
         sum_cum = 1
         interval = [sum_cum]
 
-        #Extract date feature into two categorical features and one numerical
         #Extract categorical features
         #In SVM format, index start with 1 while it starts with 0 in python
         for cat_feature in list_cat_features:
@@ -83,15 +83,16 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
         for num_feature in list_numerical_features:
             mean = scale[featname[int(num_feature)]][0]
             std = scale[featname[int(num_feature)]][1]
-            maximum = scale[featname[int(num_feature)]][2]
+            minimum = scale[featname[int(num_feature)]][2]
+            maximum = scale[featname[int(num_feature)]][3]
 
             if data[num_feature] != '':
-                scaled_data = (float(data[num_feature])-mean)/std
+                scaled_data = (float(data[num_feature])-minimum)/(maximum-minimum)
             else:
                 #None values
                 if(featname[int(num_feature)] == 'last_login_interval' or
                         featname[int(num_feature)] == 'last_paid_interval'):
-                    scaled_data = maximum
+                    scaled_data = 1.0
                 else:
                     scaled_data = 0.0
 
@@ -104,9 +105,8 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
             x_svm.append(index + ':1')
 
         extracted_features = x_svm+x_num
-        # print(extracted_features)
-        fout.write(' '.join(extracted_features) + '\n')
 
+        fout.write(' '.join(extracted_features) + '\n')
         # i = i+1
         # if i == 5:
         #     break

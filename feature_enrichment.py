@@ -59,7 +59,7 @@ def get_day_of_the_week(timestamp):
 def extract_prior_on_user(df_train, df_test):
 
     # Compute the prior on the training set
-    prior = df_train.groupby(['uid'])['click'].agg(['mean', 'count'])
+    prior = df_train.groupby(['uid'])['click'].agg(['mean', 'count', 'sum'])
 
     # Join the prior to the training set
     enriched_df_train = df_train.join(prior, on=['uid'])

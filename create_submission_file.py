@@ -1,8 +1,8 @@
 
-fin = open('sample-submission-liblinear')
+fin = open('submission/sample-submission-liblinear')
 fin.readline()
 
-fout = open('sample-submission.dat','w')
+fout = open('submission/sample-submission.dat','w')
 
 for line in fin:
     data = line.strip().split(' ')
