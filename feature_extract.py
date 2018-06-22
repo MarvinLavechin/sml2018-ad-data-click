@@ -1,6 +1,6 @@
 import argparse
-import datetime
 import numpy as np
+import itertools
 
 parser = argparse.ArgumentParser()
 
@@ -12,12 +12,12 @@ parser.add_argument("--output_train", type=str, default="train_svm.txt", help="T
 parser.add_argument("--output_test", type=str, default="test_svm.txt", help="The output file where to write the test extracted features")
 parser.add_argument("--list_cat_features", nargs='+', default =[], type=int, help="The list of categorical features to extract")
 parser.add_argument("--list_num_features", nargs='+', default=[], type=int, help="The list of numerical features to extract")
-
+parser.add_argument("--list_cross_features", nargs='+', default=[], type=int, help="The list of crossed features to extract")
 a = parser.parse_args()
 
 
 
-def extract_features(input, max_id, scale_file, output, list_cat_features, list_numerical_features):
+def extract_features(input, max_id, scale_file, output, list_cat_features, list_numerical_features, list_cross_features):
     """
     Extract the features contained in input file (csv) and write the extracted features in the output file (SVM format)
     :param input: the csv file containing the features
@@ -77,6 +77,15 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
             sum_cum = sum_cum + maxID[featname[int(cat_feature)]]
             interval.append(sum_cum)
 
+        #Extract crossed features
+        for first_ft, snd_ft in itertools.combinations(list_cross_features, 2):
+            first_data = int(data[first_ft])
+            snd_data = int(data[snd_ft])
+            crossed_data = first_data*snd_data
+            x.append(str(crossed_data + sum_cum))
+            sum_cum = sum_cum + maxID[featname[int(first_ft)]] * maxID[featname[int(snd_ft)]]
+            interval.append(sum_cum)
+
         #Extract numerical features
         x_num = []
 
@@ -122,11 +131,13 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
 def main():
 
     print("Extraction of the training features : ")
-    extract_features(a.input_train, a.max_id, a.scale_file, a.output_train, a.list_cat_features, a.list_num_features)
+    extract_features(a.input_train, a.max_id, a.scale_file, a.output_train,
+                     a.list_cat_features, a.list_num_features, a.list_cross_features)
     print("\t Done.")
 
     print("Extraction of the test features : ")
-    extract_features(a.input_test, a.max_id, a.scale_file, a.output_test, a.list_cat_features, a.list_num_features)
+    extract_features(a.input_test, a.max_id, a.scale_file, a.output_test,
+                     a.list_cat_features, a.list_num_features, a.list_cross_features)
     print("\t Done.")
 
 main()
