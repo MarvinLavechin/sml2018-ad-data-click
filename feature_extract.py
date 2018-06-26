@@ -115,7 +115,8 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
 
         x_svm = [click]
         for index in x:
-            x_svm.append(index + ':1')
+            x_svm.append(index + ':' + str(1.0 / len(x)))
+            # x_svm.append(index + ':1')
 
         extracted_features = x_svm+x_num
 
