@@ -41,14 +41,17 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
     # For each features, construct the table of the maxID
     for line in finID:
         i, id = line.strip().split('\t')
-        maxID[featname[int(i)]] = int(id) + 1
+        if(int(i) < len(featname)):
+            maxID[featname[int(i)]] = int(id) + 1
 
     scale = {}
     scale_file = open(data_directory+scale_file)
     # For each numerical features, construct the table of the mean/scale
+
     for line in scale_file:
         i, mean, std, minimum, maximum = line.strip().split(' ')
-        scale[featname[int(i)]] = [float(mean), float(std), float(minimum), float(maximum)]
+        if (int(i) < len(featname)):
+            scale[featname[int(i)]] = [float(mean), float(std), float(minimum), float(maximum)]
 
     # Open output file which will contain extracted features
     fout = open(data_directory+output,'w')
@@ -68,6 +71,7 @@ def extract_features(input, max_id, scale_file, output, list_cat_features, list_
 
         x = []
         sum_cum = 1
+
         interval = [sum_cum]
 
         #Extract categorical features

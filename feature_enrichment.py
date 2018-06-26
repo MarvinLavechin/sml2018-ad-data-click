@@ -56,7 +56,7 @@ def get_day_of_the_week(timestamp):
 
     return int(day_of_the_week)
 
-def extract_prior_on_user(df_train, df_test):
+def extract_prior_on_user(df_train, df_test, df_undersampled=None):
 
     # Compute the prior on the training set
     prior = df_train.groupby(['uid'])['click'].agg(['mean', 'count', 'sum'])
@@ -73,15 +73,27 @@ def extract_prior_on_user(df_train, df_test):
                              columns={"mean": "prior_uid_click_trough_rate", "count": "prior_uid_nb_observations"},
                              inplace=True)
 
-    return enriched_df_train, enriched_df_test
+    # In case we want to treat the undersampled dataset
+    if df_undersampled is not None:
+        enriched_undersampled_df_train = df_undersampled.join(prior, on=['uid'])
+        enriched_undersampled_df_train.rename(index=str,
+                                              columns={"mean": "prior_uid_click_trough_rate",
+                                                       "count": "prior_uid_nb_observations"},
+                                              inplace=True
+                                              )
+    else:
+        enriched_undersampled_df_train = None
+
+    return enriched_df_train, enriched_df_test, enriched_undersampled_df_train
 
 def main():
     # Load train and test set
     df_train = pd.read_csv('data/data_train.csv', header=0, sep=',', parse_dates=['logged_at'])
     df_test = pd.read_csv('data/data_test.csv', header=0, sep=',', parse_dates=['logged_at'])
+    df_undersampled = pd.read_csv('data/undersampled_data_train.csv', header=0, sep=',', parse_dates=['logged_at'])
 
     print("Computing prior knowledge on users")
-    df_enriched_train, df_enriched_test = extract_prior_on_user(df_train, df_test)
+    df_enriched_train, df_enriched_test, df_enriched_undersampled_train = extract_prior_on_user(df_train, df_test, df_undersampled)
 
     print("Extracting time information")
     df_enriched_train['day_of_the_week'] = (df_enriched_train['logged_at'].astype(str)).apply(lambda x: get_day_of_the_week(x))
@@ -92,7 +104,12 @@ def main():
     df_enriched_test['hour'] = (df_enriched_test['logged_at'].astype(str)).apply(lambda x: get_hour(x))
     df_enriched_test['season'] = (df_enriched_test['logged_at'].astype(str)).apply(lambda x: get_season(x))
 
+    df_enriched_undersampled_train['day_of_the_week'] = (df_enriched_undersampled_train['logged_at'].astype(str)).apply(lambda x: get_day_of_the_week(x))
+    df_enriched_undersampled_train['hour'] = (df_enriched_undersampled_train['logged_at'].astype(str)).apply(lambda x: get_hour(x))
+    df_enriched_undersampled_train['season'] = (df_enriched_undersampled_train['logged_at'].astype(str)).apply(lambda x: get_season(x))
+
     df_enriched_train.to_csv(path_or_buf='data/enriched_data_train.csv', index=False)
     df_enriched_test.to_csv(path_or_buf='data/enriched_data_test.csv', index=False)
+    df_enriched_undersampled_train.to_csv(path_or_buf='data/enriched_undersampled_data_train.csv', index=False)
 
 main()
